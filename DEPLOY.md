@@ -11,25 +11,27 @@
 
 ## 📦 Backend (FastAPI)
 
-### Opção 1: Render.com (Recomendado - Gratuito)
+### Opção 1: AWS EC2 Free Tier (Recomendado)
 
-1. **Criar conta em [render.com](https://render.com)**
+**Vantagens:**
+- 12 meses completamente grátis
+- Controle total do servidor
+- Profissional e escalável
 
-2. **Criar novo Web Service:**
-   - Repository: Conecte seu GitHub
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+**Guia completo:** Veja `AWS-DEPLOY.md`
 
-3. **Configurar variáveis de ambiente:**
-   ```
-   OPENAI_API_KEY=sua_chave_aqui
-   OPENAI_MODEL=gpt-4o-mini
-   JWT_SECRET_KEY=gere_uma_chave_segura_aqui
-   ADMIN_USERNAME=fcj_creator
-   ADMIN_PASSWORD=fcj2025@tr4ction
-   ```
+**Quick Start:**
+```bash
+# 1. Criar EC2 (t2.micro, Ubuntu 22.04)
+# 2. Conectar via SSH
+ssh -i "sua-chave.pem" ubuntu@seu-ip-ec2
 
-4. **Deploy automático após cada commit**
+# 3. Rodar script automático
+curl -fsSL https://raw.githubusercontent.com/lucasptrolesi-ai/FCJ_Tr4action/main/setup-aws.sh | bash
+
+# 4. Configurar .env
+nano /home/ubuntu/FCJ_Tr4action/backend/.env
+```
 
 ### Opção 2: Railway.app
 
@@ -37,20 +39,18 @@
 2. **Adicionar variáveis de ambiente**
 3. **Deploy automático**
 
-### Opção 3: Heroku
+### Opção 3: Vercel (Backend + Frontend)
 
 ```bash
-heroku create tr4ction-agent-backend
-heroku config:set OPENAI_API_KEY=sua_chave
-heroku config:set OPENAI_MODEL=gpt-4o-mini
-git push heroku main
+# Deploy tudo junto
+vercel
 ```
 
 ---
 
 ## 🌐 Frontend (HTML/JS)
 
-### Opção 1: Vercel (Recomendado)
+### Opção 1: Vercel
 
 1. **Instalar Vercel CLI:**
    ```bash
@@ -65,7 +65,7 @@ git push heroku main
 
 3. **Atualizar BACKEND_URL:**
    - Edite `js/app.js` e `js/admin_auth.js`
-   - Substitua `http://127.0.0.1:8000` pela URL do Render
+   - Substitua `http://127.0.0.1:8000` pela URL da sua AWS EC2
 
 ### Opção 2: Netlify
 
@@ -93,19 +93,17 @@ git push -u origin gh-pages
 
 ### CORS no Backend
 
-Atualize `main.py` com a URL do frontend em produção:
+Atualize o `.env` na AWS EC2:
 
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://seu-dominio.vercel.app",
-        "http://localhost:5500"  # apenas desenvolvimento
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+```bash
+ssh -i "sua-chave.pem" ubuntu@seu-ip-ec2
+nano /home/ubuntu/FCJ_Tr4action/backend/.env
+
+# Adicione:
+ALLOWED_ORIGINS=https://seu-dominio.vercel.app,http://localhost:5500
+
+# Reinicie:
+sudo systemctl restart tr4ction-backend
 ```
 
 ### Atualizar URLs no Frontend
@@ -123,7 +121,9 @@ const BACKEND_URL = "http://127.0.0.1:8000";
 
 Por:
 ```javascript
-const BACKEND_URL = "https://seu-backend.onrender.com";
+const BACKEND_URL = "http://seu-ip-ec2/api";
+// ou com domínio:
+const BACKEND_URL = "https://api.seu-dominio.com";
 ```
 
 ---
@@ -147,36 +147,39 @@ const BACKEND_URL = "https://seu-backend.onrender.com";
 
 ## 📊 Monitoramento
 
-- **Logs Render:** Dashboard > Logs
-- **Erros Frontend:** Console do navegador
-- **Performance:** Render fornece métricas
+- **Logs AWS:** `sudo journalctl -u tr4ction-backend -f`
+- **Erros Frontend:** Console do navegador (F12)
+- **Performance:** AWS CloudWatch (gratuito)
 
 ---
 
 ## 🆘 Troubleshooting
 
 ### Erro CORS
-- Verifique `allow_origins` no `main.py`
+- Verifique `ALLOWED_ORIGINS` no `.env` da EC2
 - Certifique-se que frontend usa HTTPS
 
 ### Erro 401/403
-- Verifique se JWT_SECRET_KEY está configurado
+- Verifique se JWT_SECRET_KEY está no `.env`
 - Token expira em 24h
+- Limpe localStorage do navegador
 
 ### Erro 500
-- Verifique logs do Render
-- Confirme OPENAI_API_KEY válida
+- Logs: `sudo journalctl -u tr4ction-backend -n 50`
+- Confirme OPENAI_API_KEY válida no `.env`
 
 ---
 
 ## 📝 Checklist de Deploy
 
-- [ ] Backend deployado no Render
-- [ ] Variáveis de ambiente configuradas
+- [ ] EC2 criada e configurada
+- [ ] Backend rodando como serviço systemd
+- [ ] Nginx configurado corretamente
+- [ ] Arquivo .env com credenciais
 - [ ] Frontend deployado no Vercel
 - [ ] URLs atualizadas no frontend
-- [ ] CORS configurado corretamente
-- [ ] Credenciais de produção definidas
+- [ ] CORS configurado (ALLOWED_ORIGINS)
 - [ ] Testes de login (admin e founder)
 - [ ] Teste de chat funcional
 - [ ] Upload de PPTX testado
+- [ ] Firewall configurado (UFW/Security Group)
