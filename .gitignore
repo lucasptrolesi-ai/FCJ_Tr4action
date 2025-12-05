@@ -44,10 +44,16 @@ Thumbs.db
 
 # Logs
 *.log
+logs.txt
 
 # Data files (exceto os necessários)
 backend/data/*.npy
 backend/data/*.json
+
+# Backups
+*.bak
+*.backup
+*.old
 
 # Backups
 *.bak

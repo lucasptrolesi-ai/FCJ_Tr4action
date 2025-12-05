@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
+import logging
 from core.auth import create_access_token, ADMIN_CREDENTIALS
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
@@ -32,6 +34,7 @@ def admin_login(credentials: LoginRequest):
         credentials.username == ADMIN_CREDENTIALS["username"]
         and credentials.password == ADMIN_CREDENTIALS["password"]
     ):
+        logger.info(f"Login admin bem-sucedido: {credentials.username}")
         token = create_access_token(
             data={"sub": credentials.username},
             role="admin"
@@ -43,6 +46,7 @@ def admin_login(credentials: LoginRequest):
             message="Login admin realizado com sucesso"
         )
     
+    logger.warning(f"Tentativa de login admin falhou: {credentials.username}")
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Credenciais inválidas"
@@ -60,6 +64,8 @@ def founder_login(data: FounderLoginRequest):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Nome da startup e founder são obrigatórios"
         )
+    
+    logger.info(f"Login founder: {data.founder_name} - Startup: {data.startup_name}")
     
     token = create_access_token(
         data={

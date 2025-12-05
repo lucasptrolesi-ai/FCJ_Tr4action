@@ -1,8 +1,11 @@
 from typing import List, Dict, Any, Optional
 from openai import AsyncOpenAI
+from openai import OpenAIError, APIError, APITimeoutError
 from core.config import OPENAI_API_KEY, OPENAI_MODEL
 import asyncio
+import logging
 
+logger = logging.getLogger(__name__)
 
 # ============================================================
 # 🔐 VERIFICAÇÃO INICIAL — GARANTE QUE A API KEY EXISTE
@@ -53,14 +56,22 @@ async def chat_completion(
             ),
             timeout=timeout
         )
+        logger.info(f"Chat completion bem-sucedido com modelo {model}")
 
     except asyncio.TimeoutError:
+        logger.error(f"Timeout ao chamar OpenAI modelo {model} após {timeout}s")
         raise RuntimeError("Tempo limite excedido ao tentar chamar o modelo.")
 
-    except Exception as e:
+    except APITimeoutError as e:
+        logger.error(f"OpenAI API timeout: {str(e)}")
+        raise RuntimeError(f"API OpenAI não respondeu a tempo: {str(e)}")
+
+    except APIError as e:
+        logger.error(f"OpenAI API error: {str(e)}")
         # ====== fallback automático ======
         if model != "gpt-4o-mini":
             try:
+                logger.info(f"Tentando fallback para gpt-4o-mini")
                 fallback_model = "gpt-4o-mini"
                 response = await client.chat.completions.create(
                     model=fallback_model,
@@ -68,13 +79,19 @@ async def chat_completion(
                     temperature=temperature,
                     max_tokens=800,
                 )
-            except Exception as fallback_error:
+                logger.info("Fallback para gpt-4o-mini bem-sucedido")
+            except OpenAIError as fallback_error:
+                logger.error(f"Fallback também falhou: {str(fallback_error)}")
                 raise RuntimeError(
                     f"Erro ao chamar modelo principal ({model}) e fallback ({fallback_model}). "
                     f"Detalhe do erro principal: {e} | fallback: {fallback_error}"
                 )
         else:
             raise RuntimeError(f"Erro ao chamar modelo {model}: {e}")
+
+    except OpenAIError as e:
+        logger.error(f"OpenAI error genérico: {str(e)}")
+        raise RuntimeError(f"Erro ao chamar OpenAI: {str(e)}")
 
     # ============================================================
     # 🔁 PROCESSAMENTO DA RESPOSTA

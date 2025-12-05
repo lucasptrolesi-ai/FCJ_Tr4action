@@ -4,17 +4,34 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime, timedelta
 import jwt
 import os
+import logging
 from core.config import BASE_DIR
 
+logger = logging.getLogger(__name__)
+
 # Configuração de autenticação
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "tr4ction-secret-key-change-in-production")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "JWT_SECRET_KEY não configurada. Gere uma chave segura com: "
+        "python -c 'import secrets; print(secrets.token_hex(32))'"
+    )
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 horas
 
 # Credenciais de admin (em produção, usar banco de dados)
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+
+if not ADMIN_USERNAME or not ADMIN_PASSWORD:
+    raise RuntimeError(
+        "ADMIN_USERNAME e ADMIN_PASSWORD devem ser configuradas no arquivo .env"
+    )
+
 ADMIN_CREDENTIALS = {
-    "username": os.getenv("ADMIN_USERNAME", "fcj_creator"),
-    "password": os.getenv("ADMIN_PASSWORD", "fcj2025@tr4ction"),
+    "username": ADMIN_USERNAME,
+    "password": ADMIN_PASSWORD,
 }
 
 security = HTTPBearer()
@@ -35,11 +52,13 @@ def verify_token(credentials: HTTPAuthorizationCredentials) -> dict:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
+        logger.warning("Tentativa de acesso com token expirado")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token expirado"
         )
-    except jwt.JWTError:
+    except jwt.JWTError as e:
+        logger.warning(f"Token JWT inválido: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido"

@@ -1,4 +1,5 @@
 import io
+import logging
 
 from typing import List
 
@@ -10,6 +11,7 @@ from core.rag_engine import rag_engine, KnowledgeDoc
 from core.config import METADATA_PATH
 from core.auth import require_admin
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
@@ -70,9 +72,11 @@ async def upload_pptx(
     if not docs:
         raise HTTPException(status_code=400, detail="Não foi possível extrair texto dos PPTX enviados.")
 
+    logger.info(f"Admin {admin.get('sub')} adicionando {len(docs)} documentos à etapa '{step}'")
     rag_engine.add_documents(docs)
 
     stats = rag_engine.get_stats()
+    logger.info(f"Upload concluído. Base agora tem {stats['docs']} documentos")
     return {
         "status": "ok",
         "added": len(docs),

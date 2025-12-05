@@ -3,6 +3,7 @@
 // =========================================
 
 const BACKEND_URL = 'http://3.235.65.249/api';
+const IS_PRODUCTION = !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1');
 
 document.addEventListener("DOMContentLoaded", () => {
   // Verifica autenticação admin
@@ -72,7 +73,7 @@ function setupAdmin() {
         uploadStatus.textContent = msg;
       }
     } catch (err) {
-      console.error("Erro ao consultar /admin/knowledge:", err);
+      if (!IS_PRODUCTION) console.error("Erro ao consultar /admin/knowledge:", err);
     }
   }
 
@@ -114,7 +115,7 @@ function setupAdmin() {
 
       if (!res.ok) {
         const errText = await res.text();
-        console.error("Erro upload:", res.status, errText);
+        if (!IS_PRODUCTION) console.error("Erro upload:", res.status, errText);
         uploadStatus.textContent = "Erro ao enviar os arquivos.";
         return;
       }
@@ -127,7 +128,7 @@ function setupAdmin() {
       await refreshStats();
 
     } catch (err) {
-      console.error(err);
+      if (!IS_PRODUCTION) console.error(err);
       uploadStatus.textContent =
         "Erro de rede ao enviar arquivos. Verifique se o backend está rodando.";
     }
@@ -158,7 +159,7 @@ function setupAdmin() {
       await refreshStats();
 
     } catch (err) {
-      console.error(err);
+      if (!IS_PRODUCTION) console.error(err);
       if (reloadStatus) reloadStatus.textContent = "Erro ao recarregar.";
     }
   }

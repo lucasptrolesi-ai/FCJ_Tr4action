@@ -7,9 +7,7 @@ const BACKEND_URL = 'http://3.235.65.249/api';
 
 // 🚀 ROTA CORRETA DO BACKEND
 const CHAT_ENDPOINT = `${BACKEND_URL}/agent/ask`;
-
 const KNOWLEDGE_ENDPOINT = `${BACKEND_URL}/admin/knowledge`;
-const TEMPLATE_SUGGEST_ENDPOINT = `${BACKEND_URL}/templates/suggest`;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Verifica autenticação
@@ -109,6 +107,7 @@ function setupTabs() {
 // Configuração salva em localStorage
 // ----------------------------------------
 const CONFIG_STORAGE_KEY = "tr4ction_agent_config";
+const IS_PRODUCTION = !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1');
 
 function setupConfigPersistence() {
   const startupInput = document.getElementById("startupInput");
@@ -117,17 +116,15 @@ function setupConfigPersistence() {
   if (!startupInput || !stepSelect) return;
 
   try {
-    const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      if (saved.startup) startupInput.value = saved.startup;
-      if (saved.step) stepSelect.value = saved.step;
-    }
-  } catch (err) {
-    console.warn("Erro ao carregar config do localStorage:", err);
-  }
-
-  function saveConfig() {
+      const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.startup) startupInput.value = saved.startup;
+        if (saved.step) stepSelect.value = saved.step;
+      }
+    } catch (err) {
+      if (!IS_PRODUCTION) console.warn("Erro ao carregar config do localStorage:", err);
+    }  function saveConfig() {
     const config = {
       startup: startupInput.value.trim(),
       step: stepSelect.value,
@@ -135,7 +132,7 @@ function setupConfigPersistence() {
     try {
       localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
     } catch (err) {
-      console.warn("Erro ao salvar config:", err);
+      if (!IS_PRODUCTION) console.warn("Erro ao salvar config:", err);
     }
   }
 
@@ -214,7 +211,7 @@ function setupChat() {
       history.push({ role: "assistant", content: answer });
 
     } catch (err) {
-      console.error("Erro ao chamar backend /agent/ask:", err);
+      if (!IS_PRODUCTION) console.error("Erro ao chamar backend /agent/ask:", err);
       removeTypingIndicator(chatWindow, typingEl);
       typingEl = null;
 
@@ -237,8 +234,6 @@ function setupChat() {
       handleSend();
     }
   });
-
-  setupTemplateSuggestions();
 }
 
 // Mensagens -------------------------------------------------
@@ -310,58 +305,9 @@ async function refreshKnowledgeStats() {
         : "nenhuma etapa cadastrada";
     stepsEl.textContent = `Etapas: ${steps}`;
   } catch (err) {
-    console.error("Erro ao buscar /admin/knowledge:", err);
+    if (!IS_PRODUCTION) console.error("Erro ao buscar /admin/knowledge:", err);
     docsEl.textContent = "Documentos: erro";
     stepsEl.textContent = "Etapas: erro";
   }
 }
 
-// ----------------------------------------
-// Sugestões de Template
-// ----------------------------------------
-function setupTemplateSuggestions() {
-  const suggestBtns = document.querySelectorAll(".fcj-template-suggest-btn");
-  if (!suggestBtns.length) return;
-
-  suggestBtns.forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const targetId = btn.getAttribute("data-target");
-      const fieldName = document
-        .getElementById(targetId)
-        ?.getAttribute("data-field-name");
-
-      const textarea = document.getElementById(targetId);
-      if (!textarea) return;
-
-      textarea.value = "Gerando sugestão...";
-      btn.disabled = true;
-
-      try {
-        const res = await fetch(TEMPLATE_SUGGEST_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            field: fieldName || targetId,
-            step: document.getElementById("templateStepSelect")?.value,
-            config: getCurrentConfig(),
-          }),
-        });
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const data = await res.json();
-        textarea.value =
-          data.suggestion ||
-          data.text ||
-          "Backend não retornou sugestão.";
-
-      } catch (err) {
-        console.error("Erro na sugestão:", err);
-        textarea.value =
-          "Não consegui gerar sugestão. Verifique o backend.";
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  });
-}
