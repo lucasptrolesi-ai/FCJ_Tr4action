@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login – TR4CTION Agent</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a5f7a 0%, #086f8f 100%);
+        }
+        .login-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+        .login-card h1 {
+            color: #1a5f7a;
+            margin-bottom: 0.5rem;
+        }
+        .login-card p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        .login-card input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .login-card button {
+            width: 100%;
+            padding: 14px;
+            background: #1a5f7a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .login-card button:hover {
+            background: #086f8f;
+        }
+        .error-msg {
+            color: #d32f2f;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .divider {
+            text-align: center;
+            margin: 2rem 0;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <h1>TR4CTION Agent</h1>
+            <p>Acesso para Founders</p>
+            
+            <form id="founderLoginForm">
+                <input 
+                    type="text" 
+                    id="startupName" 
+                    placeholder="Nome da sua Startup"
+                    required 
+                />
+                <input 
+                    type="text" 
+                    id="founderName" 
+                    placeholder="Seu nome"
+                    required 
+                />
+                <button type="submit">Entrar no Chat</button>
+            </form>
+
+            <div class="divider">───────────</div>
+
+            <button onclick="window.location.href='login-admin.html'" style="background: #666;">
+                Acesso Criadores FCJ
+            </button>
+
+            <div id="errorMsg" class="error-msg"></div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = "http://127.0.0.1:8000";
+        
+        document.getElementById('founderLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const startupName = document.getElementById('startupName').value.trim();
+            const founderName = document.getElementById('founderName').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if (!startupName || !founderName) {
+                errorMsg.textContent = 'Por favor, preencha todos os campos';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/auth/founder/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        startup_name: startupName,
+                        founder_name: founderName
+                    })
+                });
+                
+                if (!res.ok) {
+                    const error = await res.json();
+                    errorMsg.textContent = error.detail || 'Erro ao fazer login';
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                // Salva token e dados no localStorage
+                localStorage.setItem('tr4ction_token', data.access_token);
+                localStorage.setItem('tr4ction_role', data.role);
+                localStorage.setItem('tr4ction_startup', startupName);
+                localStorage.setItem('tr4ction_founder', founderName);
+                
+                // Redireciona para o chat
+                window.location.href = 'index.html';
+                
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = 'Erro de conexão. Verifique se o backend está rodando.';
+            }
+        });
+    </script>
+</body>
+</html>

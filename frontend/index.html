@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TR4CTION Agent – FCJ Venture Builder</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon"
+          href="https://fcjventurebuilder.com/wp-content/uploads/2023/03/cropped-fcj-favicon-32x32.png">
+</head>
+
+<body>
+
+<header class="fcj-header">
+    <div class="fcj-header__content">
+        <div class="fcj-header__brand">
+            <h1>TR4CTION Agent</h1>
+            <span class="fcj-subtitle">Inteligência aplicada à trilha oficial FCJ</span>
+        </div>
+
+        <nav class="fcj-header__nav">
+            <button id="btnAdmin" class="btn-outline">Painel Admin</button>
+        </nav>
+    </div>
+</header>
+
+<main class="fcj-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="fcj-sidebar">
+
+        <!-- CONFIGURAÇÃO -->
+        <section class="fcj-card">
+            <h3 class="fcj-card__title">Configuração</h3>
+
+            <label for="startupInput">Nome da Startup</label>
+            <input id="startupInput" placeholder="Ex: Trolesi AI Tech">
+
+            <label for="founderInput">Nome do Founder</label>
+            <input id="founderInput" placeholder="Ex: Lucas Peixoto">
+
+            <label for="stepSelect">Etapa da trilha</label>
+            <select id="stepSelect">
+                <option value="todas">Todas as etapas</option>
+                <option value="diagnostico">Diagnóstico</option>
+                <option value="icp">ICP</option>
+                <option value="persona">Persona</option>
+                <option value="swot">SWOT</option>
+                <option value="metas">Metas</option>
+                <option value="conteudo">Conteúdo</option>
+            </select>
+        </section>
+
+        <!-- BASE -->
+        <section class="fcj-card">
+            <h3 class="fcj-card__title">Base de Conhecimento</h3>
+            <p id="statsDocs">Documentos: –</p>
+            <p id="statsLoaded">Etapas: –</p>
+        </section>
+
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <section class="fcj-content">
+
+        <!-- TABS -->
+        <div class="fcj-tabs">
+            <button class="fcj-tab fcj-tab--active" data-tab="chat">Agente</button>
+            <button class="fcj-tab" data-tab="templates">Templates TR4CTION</button>
+        </div>
+
+        <!-- PAINEL DE CHAT -->
+        <div id="chat" class="fcj-panel fcj-panel--active">
+
+            <div id="chatWindow" class="chat-window">
+            </div>
+
+            <div class="chat-input-row">
+                <textarea id="chatInput" placeholder="Digite sua pergunta sobre a trilha FCJ..."></textarea>
+                <button id="sendBtn" class="btn-send">Enviar</button>
+            </div>
+        </div>
+
+        <!-- PAINEL DE TEMPLATES -->
+        <div id="templates" class="fcj-panel">
+
+            <h2>Templates Oficiais</h2>
+
+            <label for="templateStepSelect">Selecione a etapa:</label>
+            <select id="templateStepSelect">
+                <option value="diagnostico">Diagnóstico</option>
+                <option value="icp">ICP</option>
+                <option value="persona">Persona</option>
+                <option value="swot">SWOT</option>
+                <option value="conteudo">Conteúdo</option>
+            </select>
+
+            <div class="template-grid">
+
+                <div class="template-card">
+                    <label for="tpl_dor">Dor principal</label>
+                    <textarea id="tpl_dor" data-field-name="dor principal"></textarea>
+                    <button class="fcj-template-suggest-btn" data-target="tpl_dor">Gerar sugestão</button>
+                </div>
+
+                <div class="template-card">
+                    <label for="tpl_puv">Proposta única de valor (PUV)</label>
+                    <textarea id="tpl_puv" data-field-name="PUV"></textarea>
+                    <button class="fcj-template-suggest-btn" data-target="tpl_puv">Gerar sugestão</button>
+                </div>
+
+                <div class="template-card">
+                    <label for="tpl_icp">Segmento e ICP</label>
+                    <textarea id="tpl_icp" data-field-name="ICP"></textarea>
+                    <button class="fcj-template-suggest-btn" data-target="tpl_icp">Gerar sugestão</button>
+                </div>
+
+            </div>
+        </div>
+
+    </section>
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>

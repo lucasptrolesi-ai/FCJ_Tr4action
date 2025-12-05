@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin – TR4CTION Agent</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="fcj-header">
+    <div class="fcj-header__content">
+        <div class="fcj-header__brand">
+            <h1>Painel Administrativo</h1>
+            <span class="fcj-subtitle">Gestão da base de conhecimento do TR4CTION Agent</span>
+        </div>
+        <nav class="fcj-header__nav">
+            <button id="btnVoltarAgente" class="btn-outline">Sair</button>
+        </nav>
+    </div>
+</header>
+
+<main class="admin-layout">
+
+    <section class="admin-card">
+        <h2>Upload de Materiais (PPTX)</h2>
+
+        <label for="stepUpload">Etapa da trilha</label>
+        <select id="stepUpload">
+            <option value="diagnostico">Diagnóstico</option>
+            <option value="icp">ICP</option>
+            <option value="persona">Persona</option>
+            <option value="swot">SWOT</option>
+            <option value="conteudo">Conteúdo</option>
+        </select>
+
+        <label for="pptxFile">Arquivo PPTX</label>
+<input type="file" id="pptxFile" accept=".pptx" multiple>
+
+
+        <button id="uploadBtn" class="btn-primary">Enviar arquivo</button>
+
+        <div id="uploadStatus" class="status-box">Aguardando upload...</div>
+    </section>
+
+    <section class="admin-card">
+        <h2>Base de Conhecimento</h2>
+
+        <button id="reloadKnowledgeBtn" class="btn-secondary">Recarregar base do disco</button>
+
+        <div id="reloadStatus" class="status-box">Nenhuma ação realizada.</div>
+    </section>
+
+</main>
+
+<script src="js/admin_auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin – TR4CTION Agent</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #5f1a1a 0%, #8f0808 100%);
+        }
+        .login-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+        .login-card h1 {
+            color: #5f1a1a;
+            margin-bottom: 0.5rem;
+        }
+        .login-card p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        .login-card input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .login-card button {
+            width: 100%;
+            padding: 14px;
+            background: #5f1a1a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .login-card button:hover {
+            background: #8f0808;
+        }
+        .error-msg {
+            color: #d32f2f;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        .back-link a {
+            color: #666;
+            text-decoration: none;
+        }
+        .back-link a:hover {
+            color: #5f1a1a;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <h1>Painel Administrativo</h1>
+            <p>Acesso exclusivo para criadores de conteúdo FCJ</p>
+            
+            <form id="adminLoginForm">
+                <input 
+                    type="text" 
+                    id="username" 
+                    placeholder="Usuário"
+                    required 
+                    autocomplete="username"
+                />
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Senha"
+                    required 
+                    autocomplete="current-password"
+                />
+                <button type="submit">Entrar no Painel Admin</button>
+            </form>
+
+            <div id="errorMsg" class="error-msg"></div>
+            
+            <div class="back-link">
+                <a href="login.html">← Voltar para login de founders</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = "http://127.0.0.1:8000";
+        
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if (!username || !password) {
+                errorMsg.textContent = 'Por favor, preencha todos os campos';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/auth/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (!res.ok) {
+                    const error = await res.json();
+                    errorMsg.textContent = error.detail || 'Credenciais inválidas';
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                // Salva token e role no localStorage
+                localStorage.setItem('tr4ction_token', data.access_token);
+                localStorage.setItem('tr4ction_role', data.role);
+                localStorage.setItem('tr4ction_admin_user', username);
+                
+                // Redireciona para o painel admin
+                window.location.href = 'admin.html';
+                
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = 'Erro de conexão. Verifique se o backend está rodando.';
+            }
+        });
+    </script>
+</body>
+</html>
