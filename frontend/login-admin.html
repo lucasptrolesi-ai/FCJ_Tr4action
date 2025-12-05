@@ -102,13 +102,15 @@
     </div>
 
     <script>
-        const BACKEND_URL = "http://3.235.65.249/api";
+        // Detecta se está em produção (Vercel) ou desenvolvimento (localhost)
+        const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const BACKEND_URL = isProduction ? "http://3.235.65.249" : "http://127.0.0.1:8000";
         
         document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
+            const password = document.getElementById('password').value.trim();
             const errorMsg = document.getElementById('errorMsg');
             
             if (!username || !password) {
@@ -117,7 +119,7 @@
             }
             
             try {
-                const res = await fetch(`${BACKEND_URL}/admin/login`, {
+                const res = await fetch(`${BACKEND_URL}/auth/admin/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })

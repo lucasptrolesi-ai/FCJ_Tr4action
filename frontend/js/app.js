@@ -3,7 +3,9 @@
 // =========================================
 
 // Ajuste aqui se o backend estiver em outro host/porta
-const BACKEND_URL = 'http://3.235.65.249/api';
+// Detecta se está em produção (Vercel) ou desenvolvimento (localhost)
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+const BACKEND_URL = isProduction ? 'http://3.235.65.249' : 'http://127.0.0.1:8000';
 
 // 🚀 ROTA CORRETA DO BACKEND
 const CHAT_ENDPOINT = `${BACKEND_URL}/agent/ask`;
