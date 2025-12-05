@@ -96,7 +96,7 @@
     </div>
 
     <script>
-        const BACKEND_URL = "http://127.0.0.1:8000";
+        const BACKEND_URL = "http://3.235.65.249/api";
         
         document.getElementById('founderLoginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -111,7 +111,7 @@
             }
             
             try {
-                const res = await fetch(`${BACKEND_URL}/auth/founder/login`, {
+                const res = await fetch(`${BACKEND_URL}/founder/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
