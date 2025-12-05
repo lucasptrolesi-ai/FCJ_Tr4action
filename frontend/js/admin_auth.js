@@ -4,7 +4,8 @@
 
 // Detecta se está em produção (Vercel) ou desenvolvimento (localhost)
 const IS_PRODUCTION = !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1');
-const BACKEND_URL = IS_PRODUCTION ? 'http://3.235.65.249' : 'http://127.0.0.1:8000';
+// Em produção o backend expõe a API via nginx em /api/
+const BACKEND_URL = IS_PRODUCTION ? 'http://3.235.65.249/api' : 'http://127.0.0.1:8000';
 
 document.addEventListener("DOMContentLoaded", () => {
   // Verifica autenticação admin

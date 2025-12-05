@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Backend TR4CTION</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #1a5f7a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #086f8f;
+        }
+        .result {
+            background: white;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success { border-left: 4px solid #4caf50; }
+        .error { border-left: 4px solid #f44336; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste Backend TR4CTION Agent</h1>
+
+    <div class="test-section">
+        <h2>1. Teste de Conectividade</h2>
+        <button onclick="testRoot()">Testar GET /</button>
+        <div id="result-root" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Login Admin</h2>
+        <input type="text" id="admin-user" placeholder="Usuário" value="fcj_creator" style="padding: 8px; margin: 5px;">
+        <input type="password" id="admin-pass" placeholder="Senha" value="FCJ@Tr4ction2025!" style="padding: 8px; margin: 5px;">
+        <br>
+        <button onclick="testAdminLogin()">Testar Login Admin</button>
+        <div id="result-admin" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Login Founder</h2>
+        <input type="text" id="founder-startup" placeholder="Nome da Startup" value="Test Startup" style="padding: 8px; margin: 5px;">
+        <input type="text" id="founder-name" placeholder="Nome do Founder" value="João Silva" style="padding: 8px; margin: 5px;">
+        <br>
+        <button onclick="testFounderLogin()">Testar Login Founder</button>
+        <div id="result-founder" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Teste Chat (requer token founder)</h2>
+        <button onclick="testChat()">Enviar Pergunta ao Chat</button>
+        <div id="result-chat" class="result"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://127.0.0.1:8000';
+        let founderToken = '';
+
+        async function testRoot() {
+            const result = document.getElementById('result-root');
+            result.textContent = 'Testando...';
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/`);
+                const data = await res.json();
+                result.className = 'result success';
+                result.textContent = `✅ Status: ${res.status}\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (err) {
+                result.className = 'result error';
+                result.textContent = `❌ Erro: ${err.message}`;
+            }
+        }
+
+        async function testAdminLogin() {
+            const result = document.getElementById('result-admin');
+            result.textContent = 'Testando...';
+            
+            const username = document.getElementById('admin-user').value;
+            const password = document.getElementById('admin-pass').value;
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/auth/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ Status: ${res.status}\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ Status: ${res.status}\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (err) {
+                result.className = 'result error';
+                result.textContent = `❌ Erro: ${err.message}`;
+            }
+        }
+
+        async function testFounderLogin() {
+            const result = document.getElementById('result-founder');
+            result.textContent = 'Testando...';
+            
+            const startup_name = document.getElementById('founder-startup').value;
+            const founder_name = document.getElementById('founder-name').value;
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/auth/founder/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ startup_name, founder_name })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    founderToken = data.access_token;
+                    result.className = 'result success';
+                    result.textContent = `✅ Status: ${res.status}\n\nToken salvo para testes!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ Status: ${res.status}\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (err) {
+                result.className = 'result error';
+                result.textContent = `❌ Erro: ${err.message}`;
+            }
+        }
+
+        async function testChat() {
+            const result = document.getElementById('result-chat');
+            
+            if (!founderToken) {
+                result.className = 'result error';
+                result.textContent = '❌ Faça login como founder primeiro!';
+                return;
+            }
+            
+            result.textContent = 'Testando...';
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/agent/ask`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${founderToken}`
+                    },
+                    body: JSON.stringify({
+                        startup_id: 'Test Startup',
+                        step: 'todas',
+                        history: [],
+                        user_input: 'O que é a metodologia TR4CTION?'
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ Status: ${res.status}\n\nResposta do Agente:\n\n${data.response}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ Status: ${res.status}\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (err) {
+                result.className = 'result error';
+                result.textContent = `❌ Erro: ${err.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
