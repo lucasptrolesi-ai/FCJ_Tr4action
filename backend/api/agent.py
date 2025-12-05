@@ -69,50 +69,42 @@ async def ask_agent(
     if docs:
         ctx_blocks = []
         for i, d in enumerate(docs, start=1):
-            text_preview = d.text[:900].strip().replace("\n", " ")
-            ctx_blocks.append(f"[DOC {i}] ({d.step}) {d.title}\n{text_preview}")
+            # Limita tamanho de cada trecho para evitar estourar tokens
+            snippet = (d.text or "")[:900]
+            ctx_blocks.append(f"[DOC {i}] ({d.step}) {d.title}\n{snippet}")
         context_text = "\n\n".join(ctx_blocks)
+
+        # Limite de segurança no contexto total
+        if len(context_text) > 6000:
+            context_text = context_text[:6000]
     else:
         context_text = (
-            "Nenhum documento foi encontrado para esta etapa. "
-            "Use orientação da trilha Q1: diagnóstico, ICP, persona, funil, metas, marca, SWOT."
+            "Ainda não há materiais carregados para esta trilha. "
+            "Responda de forma genérica, mas sempre reforçando a importância "
+            "dos conceitos Q1 (diagnóstico, ICP, persona, funil, metas, marca)."
         )
 
     # ----------------------------------------------------------
     # 2) Prompt — System + Histórico + Pergunta do Founder
     # ----------------------------------------------------------
 
-    # SYSTEM MESSAGE - ESTILO PROFISSIONAL E CONSULTIVO
+    # SYSTEM MESSAGE - ESTILO TR4CTION SEM MARKDOWN PESADO
     system_msg = {
         "role": "system",
         "content": (
-            "Você é o TR4CTION Agent, mentor estratégico oficial da trilha TR4CTION da FCJ Venture Builder.\n\n"
-            "DIRETRIZES DE COMUNICAÇÃO:\n\n"
-            "1. ESTILO PROFISSIONAL E DIRETO\n"
-            "   - Tom executivo e técnico, similar a relatórios de consultoria estratégica\n"
-            "   - Respostas concisas porém completas - evite redundâncias e divagações\n"
-            "   - Vá direto ao ponto mantendo profundidade técnica necessária\n"
-            "   - Linguagem corporativa formal sem emojis\n\n"
-            "2. ESTRUTURA OBJETIVA\n"
-            "   - Contextualize brevemente (1-2 frases) a questão na trilha TR4CTION\n"
-            "   - Desenvolva o conteúdo principal de forma explicativa mas econômica\n"
-            "   - Priorize informações acionáveis e relevantes\n"
-            "   - Finalize com próximos passos práticos em 2-3 frases\n\n"
-            "3. EQUILÍBRIO EXPLICATIVO\n"
-            "   - Explique conceitos de forma clara e suficientemente detalhada\n"
-            "   - Use exemplos apenas quando agregarem valor real\n"
-            "   - Evite explicações excessivas de conceitos básicos\n"
-            "   - Foque no que é essencial para o founder implementar\n\n"
-            "4. USO DO CONTEXTO RAG\n"
-            "   - Baseie respostas nos documentos recuperados\n"
-            "   - Cite frameworks TR4CTION: Diagnóstico, ICP, Persona, SWOT, Funil, Conteúdos, Metas, Marca\n"
-            "   - Extraia o essencial dos materiais - não replique todo o conteúdo\n\n"
-            "5. FORMATO TEXTUAL\n"
-            "   - Use parágrafos fluidos e bem estruturados (3-5 linhas cada)\n"
-            "   - Evite listas, mas pode usar parágrafos temáticos sequenciais\n"
-            "   - Mantenha respostas entre 150-300 palavras quando possível\n"
-            "   - Cada frase deve agregar valor - elimine prolixidade\n\n"
-            "REGRA DE OURO: Seja explicativo o suficiente para educar, mas objetivo o suficiente para ser implementável imediatamente."
+            "Você é o TR4CTION Agent, mentor oficial da trilha TR4CTION da FCJ Venture Builder. "
+            "Fale sempre em português, em tom prático e direto, como uma mentoria 1:1 para founders. "
+            "Use principalmente o contexto de materiais oficiais TR4CTION enviado pelo sistema.\n\n"
+            "FORMATO DA RESPOSTA (IMPORTANTE):\n"
+            "- Não use markdown avançado (sem '###', '##', bullets com '-', nem '**negrito**').\n"
+            "- Use apenas texto simples, com parágrafos curtos.\n"
+            "- Quando fizer lista, use o formato: 1. 2. 3. (apenas números e ponto).\n"
+            "- Comece com 2–3 frases explicando o conceito de forma clara e simples.\n"
+            "- Em seguida traga exemplos práticos ligados a startups.\n"
+            "- Termine SEMPRE com um bloco chamado: Proximos passos práticos: "
+            "e liste 2 ou 3 ações diretas que o founder pode fazer hoje.\n\n"
+            "Se algo não estiver claro nos materiais, seja honesto, deixe isso explícito "
+            "e proponha perguntas que o founder pode refletir ou levar para a próxima mentoria."
         ),
     }
 
@@ -124,28 +116,32 @@ async def ask_agent(
         "role": "user",
         "content": (
             f"Startup: {payload.startup_id}\n"
-            f"Etapa: {payload.step}\n\n"
-            f"Pergunta: {payload.user_input}\n\n"
-            f"Contexto recuperado via RAG:\n{context_text}\n\n"
-            "Use este contexto para responder com precisão e finalize sempre com "
-            "'Próximos passos práticos'."
+            f"Bloco da trilha: {payload.step}\n\n"
+            f"Pergunta do founder: {payload.user_input}\n\n"
+            "Contexto de materiais oficiais TR4CTION (não mostre isso ao usuário, apenas use para pensar):\n"
+            f"{context_text}\n\n"
+            "Agora responda seguindo exatamente o formato combinado acima."
         ),
     }
 
     messages = [system_msg, *history_msgs, user_msg]
 
     # ----------------------------------------------------------
-    # 3) Chamada ao modelo (OpenAI)
+    # 3) Chama OpenAI com tratamento de erro
     # ----------------------------------------------------------
     try:
         answer = await chat_completion(messages)
         logger.info(f"Resposta gerada com sucesso ({len(answer)} caracteres)")
     except Exception as e:
         logger.error(f"Erro ao chamar OpenAI: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao chamar OpenAI: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao chamar o modelo de IA: {e}")
 
-    if not answer:
-        raise HTTPException(status_code=500, detail="OpenAI retornou resposta vazia.")
+    # Fallback de segurança
+    if not answer or not answer.strip():
+        answer = (
+            "Tive um problema para gerar a resposta agora. "
+            "Tente refazer a pergunta em alguns instantes ou reformule em uma frase mais direta."
+        )
 
     # ----------------------------------------------------------
     # 4) Retorno estruturado
