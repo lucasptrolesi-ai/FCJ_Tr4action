@@ -17,7 +17,7 @@ ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5500,http://127
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS if os.getenv("ENVIRONMENT") == "production" else ["*"],
+    allow_origins=["*"],  # Aceita todas as origens
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
