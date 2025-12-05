@@ -2,7 +2,7 @@
 // Painel Admin – TR4CTION Agent (COM AUTENTICAÇÃO)
 // =========================================
 
-const BACKEND_URL = "http://127.0.0.1:8000";
+const BACKEND_URL = 'http://3.235.65.249/api';
 
 document.addEventListener("DOMContentLoaded", () => {
   // Verifica autenticação admin

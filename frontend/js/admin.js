@@ -3,7 +3,7 @@
 // Upload de PPTX + Recarregar base RAG
 // =========================================
 
-const BACKEND_URL = "http://127.0.0.1:8000";
+const BACKEND_URL = 'http://3.235.65.249/api';
 
 document.addEventListener("DOMContentLoaded", () => {
   const fileInput = document.getElementById("pptxFile");
